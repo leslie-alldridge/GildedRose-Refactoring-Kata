@@ -2,39 +2,46 @@
 
 class GildedRose(object):
 
+    backstage_passes = "Backstage passes to a TAFKAL80ETC concert"
+    aged_brie = "Aged Brie"
+
     def __init__(self, items):
         self.items = items
 
+    def adjust_quality(self, item, rate):
+        """
+        Adjust the quality of an item, defaults to -1
+        Quality cannot be less than 0 or bumped beyond 50
+        """
+        item.quality += rate
+        # Clamp method - not available in Python
+        item.quality = max(min(item.quality, 50), 0)
+
     def update_quality(self):
         for item in self.items:
-            if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
-                if item.quality > 0:
-                    if item.name != "Sulfuras, Hand of Ragnaros":
-                        item.quality = item.quality - 1
-            else:
-                if item.quality < 50:
-                    item.quality = item.quality + 1
-                    if item.name == "Backstage passes to a TAFKAL80ETC concert":
-                        if item.sell_in < 11:
-                            if item.quality < 50:
-                                item.quality = item.quality + 1
-                        if item.sell_in < 6:
-                            if item.quality < 50:
-                                item.quality = item.quality + 1
-            if item.name != "Sulfuras, Hand of Ragnaros":
-                item.sell_in = item.sell_in - 1
-            if item.sell_in < 0:
-                if item.name != "Aged Brie":
-                    if item.name != "Backstage passes to a TAFKAL80ETC concert":
-                        if item.quality > 0:
-                            if item.name != "Sulfuras, Hand of Ragnaros":
-                                item.quality = item.quality - 1
-                    else:
-                        item.quality = item.quality - item.quality
-                else:
-                    if item.quality < 50:
-                        item.quality = item.quality + 1
+            
+            item.sell_in -= 1
+            rate = -1 if item.sell_in >= 0 else -2
 
+            match item.name:
+                case self.aged_brie:
+                    rate = abs(rate)
+                case item.name if "Conjured" in item.name:
+                    rate *= 2
+                case self.backstage_passes:
+                    if 5 <= item.sell_in <= 10:
+                        rate = 2
+                    elif 0 <= item.sell_in <= 5:
+                        rate = 3
+                    else:
+                        rate = 1 if item.sell_in >= 0 else -item.quality
+                case item.name if "Sulfuras" in item.name:
+                    return
+                case _:
+                    return self.adjust_quality(item, rate)
+
+            return self.adjust_quality(item, rate)
+            
 
 class Item:
     def __init__(self, name, sell_in, quality):
