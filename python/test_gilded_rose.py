@@ -100,7 +100,7 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEqual(3, items[0].quality)
         
         gilded_rose.update_quality()
-        self.assertEqual(-1, items[0].quality) # Sell in below zero, degrade -4 quality
+        self.assertEqual(0, items[0].quality) # Sell in below zero, degrade -4 quality
 
 
 if __name__ == '__main__':

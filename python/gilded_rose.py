@@ -2,6 +2,9 @@
 
 class GildedRose(object):
 
+    backstage_passes = "Backstage passes to a TAFKAL80ETC concert"
+    aged_brie = "Aged Brie"
+
     def __init__(self, items):
         self.items = items
 
@@ -10,31 +13,32 @@ class GildedRose(object):
         Adjust the quality of an item, defaults to -1
         Quality cannot be less than 0 or bumped beyond 50
         """
-        if item.quality <= 0 or item.quality >= 50:
-            return
-
         item.quality += rate
+        # Clamp method - not available in Python
+        item.quality = max(min(item.quality, 50), 0)
 
     def update_quality(self):
         for item in self.items:
-
+            
             item.sell_in -= 1
-            has_positive_sell_in = item.sell_in >= 0
-            rate = -1 if has_positive_sell_in else -2
+            rate = -1 if item.sell_in >= 0 else -2
 
-            if item.name == "Aged Brie":
-                rate = abs(rate)
-
-            if item.name == "Backstage passes to a TAFKAL80ETC concert":
-                if 5 <= item.sell_in <= 10:
-                    rate = 2
-                elif 0 <= item.sell_in <= 5:
-                    rate = 3
-                else:
-                    rate = 1 if has_positive_sell_in else -item.quality
-
-            if "Conjured" in item.name:
-                rate *= 2
+            match item.name:
+                case self.aged_brie:
+                    rate = abs(rate)
+                case item.name if "Conjured" in item.name:
+                    rate *= 2
+                case self.backstage_passes:
+                    if 5 <= item.sell_in <= 10:
+                        rate = 2
+                    elif 0 <= item.sell_in <= 5:
+                        rate = 3
+                    else:
+                        rate = 1 if item.sell_in >= 0 else -item.quality
+                case item.name if "Sulfuras" in item.name:
+                    return
+                case _:
+                    return self.adjust_quality(item, rate)
 
             return self.adjust_quality(item, rate)
             
